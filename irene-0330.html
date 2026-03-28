@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>签售CUT|yuiki</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: #f0f8ff; font-family: 'Nunito', sans-serif; color: #1a242e; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+    body::before, body::after { content: ''; position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
+    body::before { width: 280px; height: 280px; background: radial-gradient(circle, rgba(153, 204, 255, 0.35) 0%, transparent 70%); top: -80px; right: -60px; }
+    body::after { width: 220px; height: 220px; background: radial-gradient(circle, rgba(140, 210, 255, 0.35) 0%, transparent 70%); bottom: 60px; left: -50px; }
+    .bg-blob { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; width: 160px; height: 160px; background: radial-gradient(circle, rgba(160, 230, 255, 0.25) 0%, transparent 70%); bottom: 200px; right: -30px; }
+
+    .header { background: #fff; padding: 18px 18px 16px; display: flex; align-items: center; gap: 10px; position: relative; z-index: 10; box-shadow: 0 4px 20px rgba(100, 150, 255, 0.12); border-bottom: 3px solid #e0f0ff; }
+    .header-badge { background: linear-gradient(135deg, #66b3ff 0%, #3399ff 100%); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; white-space: nowrap; box-shadow: 0 4px 12px rgba(51, 153, 255, 0.35); animation: bounce 1.8s ease-in-out infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-3px) rotate(1deg); } }
+    .header-title { font-size: 16px; font-weight: 800; color: #2d77cc; line-height: 1.3; }
+    
+    .notice-wrap { margin: 14px 14px; background: linear-gradient(135deg, #f5faff 0%, #ebf5ff 100%); border-radius: 20px; padding: 14px 16px; border: 2px dashed #99ccff; position: relative; z-index: 1; }
+    .notice-text { font-size: 13px; color: #2a4a6e; line-height: 1.8; font-weight: 600; }
+
+    .card { background: #fff; border-radius: 22px; margin: 12px 14px; padding: 20px 18px 16px; border: 2px solid #e0f0ff; box-shadow: 0 6px 24px rgba(100, 150, 255, 0.1), 0 2px 8px rgba(0,0,0,0.04); position: relative; z-index: 1; overflow: hidden; }
+    .card-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #335577; margin-bottom: 10px; font-weight: 700; white-space: nowrap; }
+    .card-label .icon { font-size: 18px; }
+    .card-value { font-size: 34px; font-weight: 800; color: #4da6ff; line-height: 1.2; margin-bottom: 4px; }
+    .card-desc { font-size: 12px; color: #6080a0; margin-top: 8px; font-weight: 600; }
+    .card input[type="number"] { font-size: 26px; font-weight: 800; color: #4da6ff; border: none; outline: none; background: transparent; width: 100%; padding: 2px 0; line-height: 1.2; }
+    .card input[type="number"]::-webkit-inner-spin-button, .card input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .card input[type="number"]::placeholder { color: #cce6ff; font-size: 20px; font-weight: 600; }
+
+    .cut-card { background: linear-gradient(135deg, #ebf5ff 0%, #e0f0ff 100%); }
+    .cut-card .card-value { background: linear-gradient(135deg, #66b3ff 0%, #2d77cc 100%); color: transparent; -webkit-background-clip: text; background-clip: text; border-radius: 16px; display: inline-block; padding: 8px 28px; font-size: 30px; border: 2.5px solid #99ccff; }
+
+    .record-card { background: #fff; border-radius: 22px; margin: 12px 14px 28px; padding: 18px 16px 14px; border: 2px solid #e0f0ff; box-shadow: 0 6px 24px rgba(100, 150, 255, 0.1); position: relative; z-index: 1; }
+    .record-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    .record-title-wrap { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .record-title { font-size: 15px; font-weight: 800; color: #2d77cc; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .record-count { background: #e0f0ff; color: #1f66b8; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+    .record-update { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #4dc9a3; font-weight: 800; }
+    .record-update .dot { width: 8px; height: 8px; background: #4dc9a3; border-radius: 50%; display: inline-block; animation: blink 1.8s ease-in-out infinite; box-shadow: 0 0 8px rgba(77, 201, 163, 0.5); }
+
+    .sort-toggle { display: flex; gap: 10px; margin-bottom: 14px; }
+    .sort-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #50667a; cursor: pointer; padding: 7px 14px; border-radius: 30px; border: 2px solid #eee; font-weight: 700; background: #fafafa; white-space: nowrap; }
+    .sort-btn .radio { width: 16px; height: 16px; border: 2px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .sort-btn.active { background: linear-gradient(135deg, #e0f0ff 0%, #cce6ff 100%); border-color: #99ccff; color: #2d77cc; }
+    .sort-btn.active .radio { border-color: #66b3ff; background: linear-gradient(135deg, #66b3ff 0%, #2d77cc 100%); }
+    .sort-btn.active .radio::after { content: ''; width: 7px; height: 7px; background: #fff; border-radius: 50%; }
+
+    .table-container { max-height: 380px; overflow-y: auto; margin-bottom: 10px; padding-right: 4px; }
+    .table-container::-webkit-scrollbar { width: 6px; }
+    .table-container::-webkit-scrollbar-thumb { background: #cce6ff; border-radius: 10px; }
+    
+    .record-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
+    .record-table th { font-size: 11px; color: #6080a0; font-weight: 700; text-align: left; padding: 6px 8px 10px; position: sticky; top: 0; background: #fff; z-index: 5; white-space: nowrap; }
+    .record-table th:last-child, .record-table td:last-child { text-align: right; }
+    .record-table tbody tr { background: #f7fbff; border-radius: 12px; }
+    .record-table td { font-size: 13px; color: #1a242e; padding: 11px 8px; vertical-align: middle; border-top: 1px solid #ebf5ff; border-bottom: 1px solid #ebf5ff; }
+    .record-table td:first-child { border-left: 1px solid #ebf5ff; border-radius: 12px 0 0 12px; }
+    .record-table td:last-child { border-right: 1px solid #ebf5ff; border-radius: 0 12px 12px 0; }
+    .record-table .col-time { font-size: 11.5px; color: #55687a; white-space: nowrap; font-weight: 600; }
+    .record-table .col-source { color: #3a4f80; font-weight: 700; }
+    .record-table .col-change { color: #303f4a; font-size: 12px; font-weight: 600; }
+    .record-table .col-single { font-weight: 800; font-size: 14px; white-space: nowrap; }
+    
+    .col-single.positive { color: #3399ff; }
+    .col-single.zero { color: #b0b0d0; }
+    .col-single.negative { color: #ff4d4f; }
+
+    .record-footer { text-align: center; font-size: 12px; color: #7090b0; padding: 12px 0 4px; font-weight: 600; }
+    .record-footer::before { content: '🫧 '; }
+    .record-footer::after { content: ' 🫧'; }
+
+    .card-row { display: flex; gap: 10px; margin: 12px 14px; position: relative; z-index: 1; }
+    .card-row .card { flex: 1; margin: 0; min-width: 0; padding: 14px 12px 12px; }
+    .card-row .cut-card .card-value { font-size: 20px; padding: 6px 10px; min-width: unset; width: 100%; text-align: center; display: block; }
+    
+    @media (max-width: 500px) {
+      .card-row { gap: 8px; margin: 10px 10px; }
+      .card { padding: 12px 10px; margin: 10px 10px; }
+      .card input[type="number"] { font-size: 24px; }
+      .card-value { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blob"></div>
+  <div class="header">
+    <span class="header-badge">🔥 限时</span>
+    <span class="header-title">irene k4线下签售 3.30 22:59截止</span>
+  </div>
+  <div class="notice-wrap">
+    <p class="notice-text">
+      最后5-10分钟请监控销量变化补单，推荐本数根据数据来源内的所有数据计算，为中签中位数本数，仅作参考，不提供擦线本数；若名额人数有问题、数据长时间没更新，请及时联系我们（vx：yuiki）。
+    </p>
+  </div>
+
+  <div class="card-row">
+    <div class="card card-sm">
+      <div class="card-label"><span class="icon">💧</span>注水阈值</div>
+      <input type="number" id="threshold" value="" placeholder="输入数值" oninput="recalculate()" />
+      <div class="card-desc">填写后计算推荐 CUT</div>
+    </div>
+    <div class="card card-sm cut-card">
+      <div class="card-label"><span class="icon">📐</span>推荐 CUT</div>
+      <span class="card-value" id="recommended-cut">0</span>
+      <div class="card-desc">仅供参考</div>
+    </div>
+  </div>
+
+  <div class="card-row">
+    <div class="card card-sm">
+      <div class="card-label"><span class="icon">📊</span>总销量</div>
+      <div class="card-value" id="total-sales">0</div>
+      <div class="card-desc">本场活动的总销售量</div>
+    </div>
+    <div class="card card-sm">
+      <div class="card-label"><span class="icon">👥</span>名额人数</div>
+      <input type="number" id="slots" value="50" placeholder="3" oninput="recalculate()" />
+      <div class="card-desc">总名额人数</div>
+    </div>
+  </div>
+
+  <div class="record-card" id="record-section" style="display:none;">
+    <div class="record-header">
+      <div class="record-title-wrap">
+        <span class="record-title"><span class="emoji">🧊</span>销量变化实时记录</span>
+        <span class="record-count" id="record-count">0 条</span>
+      </div>
+      <div class="record-update">
+        <span class="dot"></span>
+        <span id="real-time" style="color: #2d77cc; margin-left: 2px;">—</span>
+      </div>
+    </div>
+
+    <div class="sort-toggle">
+      <div class="sort-btn active" id="btn-time" onclick="setSortMode('time')"><span class="radio"></span>时间顺序</div>
+      <div class="sort-btn" id="btn-sales" onclick="setSortMode('sales')"><span class="radio"></span>销量降序</div>
+    </div>
+
+    <div class="table-container">
+      <table class="record-table">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>来源</th>
+            <th>变化</th>
+            <th>单笔</th>
+          </tr>
+        </thead>
+        <tbody id="record-tbody"></tbody>
+      </table>
+    </div>
+    <div class="record-footer">后台自动拉取最新数据中</div>
+  </div>
+
+  <script>
+    var rawData  = [];
+    var sortMode = 'time';
+
+    function tickClock() {
+      var now = new Date();
+      var hms = [now.getHours(), now.getMinutes(), now.getSeconds()].map(function(v) { return String(v).padStart(2, '0'); }).join(':');
+      document.getElementById('real-time').textContent = hms;
+    }
+
+    function loadData() {
+      fetch('applemusic.csv?t=' + new Date().getTime())
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.arrayBuffer();
+        })
+        .then(function (buf) {
+          parseCSV(buf);
+        })
+        .catch(function (e) { console.error("读取 CSV 失败:", e); });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      setInterval(tickClock, 1000); 
+      tickClock(); 
+
+      fetch('config.txt?t=' + new Date().getTime())
+        .then(function (res) { return res.ok ? res.text() : ''; })
+        .then(function (text) {
+          var lines = text.split(/\r?\n/);
+          var slots = parseInt((lines[0] || '').trim());
+          if (!isNaN(slots) && slots > 0) document.getElementById('slots').value = slots;
+          var notice = (lines[1] || '').trim();
+          if (notice) document.querySelector('.notice-text').textContent = notice;
+          recalculate();
+        })
+        .catch(function () {});
+
+      loadData();
+      setInterval(loadData, 15000); 
+    });
+
+    function parseCSV(buf) {
+      var wb   = XLSX.read(buf, { type: 'array', cellDates: true });
+      var ws   = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
+      if (rows.length < 2) return;
+      var headers = rows[0].map(function (h) { return String(h).trim(); });
+      var idxTime   = findColIdx(headers, ['时间']);
+      var idxSource = findColIdx(headers, ['商品名称']);
+      var idxChange = findColIdx(headers, ['库存变化']);
+      var idxSingle = findColIdx(headers, ['单笔销量']);
+      if (idxSingle === -1) return;
+      rawData = [];
+      for (var i = 1; i < rows.length; i++) {
+        var row = rows[i];
+        if (row.every(function (c) { return String(c).trim() === ''; })) continue;
+        var singleVal = parseFloat(String(row[idxSingle]).replace(/,/g, '')) || 0;
+        rawData.push({
+          time:       idxTime   >= 0 ? String(row[idxTime]   || '').trim() : '—',
+          source:     idxSource >= 0 ? String(row[idxSource] || '').trim() : '—',
+          changeText: idxChange >= 0 ? String(row[idxChange] || '').trim() : '—',
+          single:     singleVal
+        });
+      }
+      processData();
+    }
+
+    function findColIdx(headers, candidates) {
+      for (var ci = 0; ci < candidates.length; ci++) {
+        for (var hi = 0; hi < headers.length; hi++) {
+          if (headers[hi].toLowerCase() === candidates[ci].toLowerCase()) return hi;
+        }
+      }
+      return -1;
+    }
+
+    function processData() {
+      if (rawData.length === 0) return;
+      document.getElementById('record-count').textContent = rawData.length + ' 条';
+      document.getElementById('record-section').style.display = 'block';
+      window._records = rawData;
+      recalculate();
+      renderTable();
+    }
+
+    function renderTable() {
+      var records = (window._records || []).slice();
+      if (sortMode === 'sales') records.sort(function (a, b) { return b.single - a.single; });
+      var tbody = document.getElementById('record-tbody');
+      tbody.innerHTML = '';
+      records.forEach(function (r) {
+        var singleClass = 'col-single zero';
+        var singleText  = '0';
+        if (r.single > 0) {
+          singleClass = 'col-single positive';
+          singleText  = '+' + r.single;
+        } else if (r.single < 0) {
+          singleClass = 'col-single negative';
+          singleText  = r.single; 
+        }
+
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="col-time">' + r.time + '</td>' +
+          '<td class="col-source">' + r.source + '</td>' +
+          '<td class="col-change">' + r.changeText + '</td>' +
+          '<td class="' + singleClass + '">' + singleText + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    function recalculate() {
+      var thresholdVal = document.getElementById('threshold').value.trim();
+      var slots     = parseInt(document.getElementById('slots').value) || 0;
+      var records   = window._records || [];
+      var threshold = Math.abs(parseInt(thresholdVal)); // 获取阈值绝对值，方便计算正负区间
+
+      // 1. 如果没填阈值或数据异常：总销量计算全部，推荐Cut归0
+      if (thresholdVal === '' || isNaN(threshold) || records.length === 0) {
+        document.getElementById('recommended-cut').textContent = '0';
+        var allTotal = records.reduce(function(sum, r) { return sum + r.single; }, 0);
+        document.getElementById('total-sales').textContent = allTotal;
+        return;
+      }
+
+      // 2. 算总销量：介于 负注水阈值 到 正注水阈值 之间
+      var validTotal = 0;
+      for (var i = 0; i < records.length; i++) {
+        var single = records[i].single;
+        if (single >= -threshold && single <= threshold) {
+          validTotal += single;
+        }
+      }
+
+      // 更新页面上的有效总销量
+      document.getElementById('total-sales').textContent = validTotal;
+
+      // 3. 推荐Cut计算：总销量 / 名额数，进一位取整
+      if (slots > 0) {
+        var recCut = Math.ceil(validTotal / slots);
+        document.getElementById('recommended-cut').textContent = recCut > 0 ? recCut : '0';
+      } else {
+        document.getElementById('recommended-cut').textContent = '0';
+      }
+    }
+
+    function setSortMode(mode) {
+      sortMode = mode;
+      document.getElementById('btn-time').classList.toggle('active', mode === 'time');
+      document.getElementById('btn-sales').classList.toggle('active', mode === 'sales');
+      renderTable();
+    }
+  </script>
+</body>
+</html>
